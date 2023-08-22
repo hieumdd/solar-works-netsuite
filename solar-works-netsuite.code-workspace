@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "cloud-functions"
+		},
+		{
+			"path": "sdf"
+		}
+	],
+	"settings": {
+		"jest.disabledWorkspaceFolders": [
+			"sdf"
+		]
+	}
+}
