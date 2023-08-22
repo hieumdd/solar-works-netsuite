@@ -12,27 +12,61 @@ import * as log from 'N/log';
 import * as search from 'N/search';
 
 const lib = () => {
-    const baseURL = 'https://';
+    const baseURL = 'https://us-central1-charge-bee.cloudfunctions.net/solar-works-netsuite-master';
 
     type GetUploadURLResponse = {
         filename: string;
         url: string;
     };
 
-    const getUploadURL = (): GetUploadURLResponse => {
-        const { body } = https.request({ method: 'POST', url: `${baseURL}/upload` });
-        return JSON.parse(body);
+    const getUploadURL = () => {
+        const response = https.request({ method: 'POST', url: `${baseURL}/upload` });
+
+        if (response.code !== 200) {
+            log.error('lib/get-upload-url', { response });
+            return;
+        }
+
+        const data = <GetUploadURLResponse>JSON.parse(response.body);
+        log.audit('lib/get-upload-url', data);
+
+        return data;
+    };
+
+    const upload = (url: string, rows: MapResult[]) => {
+        const response = https.request({
+            method: https.Method.PUT,
+            url,
+            headers: { 'Content-Type': 'text/plain' },
+            body: rows.map((row) => JSON.stringify(row)).join('\n'),
+        });
+
+        if (response.code !== 200) {
+            log.error('lib/upload', { url });
+            log.error('lib/upload', { response });
+            return;
+        }
+
+        return true;
     };
 
     const loadFromGCS = (filename: string) => {
-        return https.request({
+        const response = https.request({
             method: 'POST',
             url: `${baseURL}/load`,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ filename }),
-        }).code;
+        });
+
+        if (response.code !== 200) {
+            log.error('load-from-gcs', { filename });
+            log.error('load-from-gcs', { response });
+        }
+
+        return true;
     };
 
-    return { getUploadURL, loadFromGCS };
+    return { getUploadURL, upload, loadFromGCS };
 };
 
 export const getInputData: EntryPoints.MapReduce.getInputData = () => {
@@ -96,26 +130,30 @@ export const map: EntryPoints.MapReduce.map = (context) => {
 };
 
 export const reduce: EntryPoints.MapReduce.reduce = (context) => {
-    log.debug('reduce', context.values);
-    // const { getUploadURL, loadFromGCS } = lib();
-    // const { filename, url } = getUploadURL();
-};
+    const rows = context.values.map((row) => <MapResult>JSON.parse(row));
+    log.debug('reduce/rows', rows);
 
-const execute: EntryPoints.Scheduled.execute = () => {
-    const { getUploadURL, loadFromGCS } = lib();
+    const { getUploadURL, upload, loadFromGCS } = lib();
+    const uploadValues = getUploadURL();
 
-    const { filename, url } = getUploadURL();
+    if (!uploadValues) {
+        log.error('reduce/get-upload-url', {});
+        return;
+    }
 
-    log.debug('upload-to-gcs', { filename, url });
-    https.request({
-        method: 'PUT',
-        url,
-        headers: { 'Content-Type': 'text/plain' },
-        body: [].map((row) => JSON.stringify(row)).join('\n'),
-    });
+    const { filename, url } = uploadValues;
 
-    log.debug('load-from-gcs', { filename });
-    loadFromGCS(filename);
+    const isUploadSuccess = upload(url, rows);
+    if (!isUploadSuccess) {
+        log.error('reduce/upload', {});
+        return;
+    }
+
+    // const isLoadFromGCSSuccess = loadFromGCS(filename);
+    // if (!isLoadFromGCSSuccess) {
+    //     log.error('reduce/load-from-gcs', { filename });
+    //     return;
+    // }
 
     return;
 };
