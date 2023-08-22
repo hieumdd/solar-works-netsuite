@@ -1,0 +1,14 @@
+{
+    "name": "solar-works-eaglytics-sdf",
+    "private": true,
+    "scripts": {
+        "build": "tsc",
+        "deploy": "tsc && suitecloud project:deploy"
+    },
+    "devDependencies": {
+        "@hitc/netsuite-types": "^2023.2.2",
+        "@oracle/suitecloud-cli": "^1.8.0",
+        "@oracle/suitecloud-unit-testing": "^1.4.0",
+        "typescript": "^5.1.6"
+    }
+}

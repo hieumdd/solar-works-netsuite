@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "module": "amd",
+        "target": "es2020",
+        "moduleResolution": "node",
+        "sourceMap": false,
+        "baseUrl": ".",
+        "esModuleInterop": true,
+        "paths": {
+            "N": [
+                "node_modules/@hitc/netsuite-types/N"
+            ],
+            "N/*": [
+                "node_modules/@hitc/netsuite-types/N/*"
+            ]
+        },
+        "outDir": "src/FileCabinet/SuiteScripts/com.eaglytics"
+    },
+    "include": [
+        "src/TypeScript/**/*.ts",
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
