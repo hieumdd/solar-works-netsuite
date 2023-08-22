@@ -2,6 +2,3 @@
 
 !.gitignore
 !dayjs.min.js
-!dayjs.weekday.js
-!lodash-amd.js
-!nunjucks.min.js

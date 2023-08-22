@@ -9,6 +9,7 @@
         "@hitc/netsuite-types": "^2023.2.2",
         "@oracle/suitecloud-cli": "^1.8.0",
         "@oracle/suitecloud-unit-testing": "^1.4.0",
+        "dayjs": "1.11.5",
         "typescript": "^5.1.6"
     }
 }

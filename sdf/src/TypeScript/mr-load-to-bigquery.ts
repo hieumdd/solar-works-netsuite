@@ -7,9 +7,11 @@
  */
 
 import { EntryPoints } from 'N/types';
+import * as format from 'N/format';
 import * as https from 'N/https';
 import * as log from 'N/log';
 import * as search from 'N/search';
+import dayjs from './dayjs.min';
 
 const lib = () => {
     const baseURL = 'https://us-central1-charge-bee.cloudfunctions.net/solar-works-netsuite-master';
@@ -73,6 +75,7 @@ export const getInputData: EntryPoints.MapReduce.getInputData = () => {
     return search.create({
         type: 'job',
         columns: [
+            search.createColumn({ name: 'custentity_bb_lead_start_date' }),
             search.createColumn({ name: 'custentity_bb_project_status' }),
             search.createColumn({ name: 'custentity_bb_revenue_amount' }),
             search.createColumn({ name: 'custentity_bb_system_size_decimal' }),
@@ -94,6 +97,7 @@ type SearchResponse = {
     id: string;
     recordType: string;
     values: {
+        custentity_bb_lead_start_date?: string;
         custentity_bb_project_status?: { value: string; text: string };
         custentity_bb_revenue_amount: string;
         custentity_bb_system_size_decimal: string;
@@ -105,12 +109,13 @@ type SearchResponse = {
 
 type MapResult = {
     id: string;
+    customer: string;
+    lead_start_date: string;
+    project_status: string;
+    revenue: string;
     sales_vendor: string;
     setter: string;
-    customer: string;
-    revenue: string;
     system_size: string;
-    project_status: string;
 };
 
 export const map: EntryPoints.MapReduce.map = (context) => {
@@ -118,12 +123,20 @@ export const map: EntryPoints.MapReduce.map = (context) => {
 
     const job: MapResult = {
         id: value.id,
+        lead_start_date: value.values.custentity_bb_lead_start_date
+            ? dayjs(
+                  <Date>format.parse({
+                      type: format.Type.DATE,
+                      value: value.values.custentity_bb_lead_start_date,
+                  }),
+              ).format('YYYY-MM-DD')
+            : undefined,
+        customer: value.values.customer?.text,
+        project_status: value.values.custentity_bb_project_status?.text,
+        revenue: value.values.custentity_bb_revenue_amount || undefined,
         sales_vendor: value.values.custentity_sse_sales_vendor_enerflo?.text,
         setter: value.values.custentity_sw_setter?.text,
-        customer: value.values.customer?.text,
-        revenue: value.values.custentity_bb_revenue_amount || undefined,
         system_size: value.values.custentity_bb_system_size_decimal || undefined,
-        project_status: value.values.custentity_bb_project_status?.text,
     };
 
     context.write('load-to-bigquery', job);
