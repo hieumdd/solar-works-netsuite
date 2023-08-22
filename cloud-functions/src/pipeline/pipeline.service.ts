@@ -7,7 +7,16 @@ export const loadFromGCS = async (filename: string) => {
 
     const loadOptions = {
         table: 'Report',
-        schema: [],
+        schema: [
+            {name: 'id', type: 'NUMERIC'},
+            {name: 'customer', type: 'STRING'},
+            {name: 'lead_start_date', type: 'DATE'},
+            {name: 'project_status', type: 'STRING'},
+            {name: 'revenue', type: 'NUMERIC'},
+            {name: 'sales_vendor', type: 'STRING'},
+            {name: 'setter', type: 'STRING'},
+            {name: 'system_size', type: 'NUMERIC'},
+        ],
     };
 
     return load(loadOptions, getFile(filename)).then(() => filename);
