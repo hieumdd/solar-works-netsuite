@@ -15,7 +15,7 @@ env:
 
 defaults:
   run:
-    working-directory: cloud-functions
+    working-directory: ./cloud-functions
 
 jobs:
   deploy:
@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version-file: ./cloud-functions/.nvmrc
+          cache-dependency-path: ./cloud-functions/package-lock.json
           cache: npm
 
       - run: npm ci
