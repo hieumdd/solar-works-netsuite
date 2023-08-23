@@ -1,8 +1,8 @@
 /**
- * mr-load-to-bigquery.ts
+ * mr-bq.ts
  *
  * @NApiVersion 2.1
- * @NScriptName mr-load-to-bigquery
+ * @NScriptName mr-bq
  * @NScriptType MapReduceScript
  */
 
@@ -29,10 +29,8 @@ const lib = () => {
             return;
         }
 
-        const data = <GetUploadURLResponse>JSON.parse(response.body);
-        log.audit('lib/get-upload-url', data);
-
-        return data;
+        log.audit('lib/get-upload-url', { response });
+        return <GetUploadURLResponse>JSON.parse(response.body);
     };
 
     const upload = (url: string, rows: MapResult[]) => {
@@ -49,6 +47,7 @@ const lib = () => {
             return;
         }
 
+        log.audit('lib/upload', { response });
         return true;
     };
 
@@ -61,10 +60,11 @@ const lib = () => {
         });
 
         if (response.code !== 200) {
-            log.error('load-from-gcs', { filename });
-            log.error('load-from-gcs', { response });
+            log.error('lib/load-from-gcs', { filename });
+            log.error('lib/load-from-gcs', { response });
         }
 
+        log.audit('lib/load-from-gcs', { response });
         return true;
     };
 
@@ -162,11 +162,11 @@ export const reduce: EntryPoints.MapReduce.reduce = (context) => {
         return;
     }
 
-    // const isLoadFromGCSSuccess = loadFromGCS(filename);
-    // if (!isLoadFromGCSSuccess) {
-    //     log.error('reduce/load-from-gcs', { filename });
-    //     return;
-    // }
+    const isLoadFromGCSSuccess = loadFromGCS(filename);
+    if (!isLoadFromGCSSuccess) {
+        log.error('reduce/load-from-gcs', { filename });
+        return;
+    }
 
     return;
 };
